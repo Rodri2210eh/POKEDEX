@@ -68,11 +68,13 @@ body {
 
 .pokemon-general-info{
     font-size: 20px;
+    text-transform:capitalize;
 }
 
 .pokemon-title-info{
     font-weight: bold;
     font-size: 20px;
+    text-transform:capitalize;
 }
 
 #second-div {
@@ -90,9 +92,11 @@ body {
 }
 
 .evolution-titles{
+    font-weight: bold;
     position: relative;
     left: -5px;
     top: -30px;
+    text-transform:capitalize;
 }
 
 .img-pokemon-evolution{
@@ -112,7 +116,15 @@ body {
     overflow-y: auto;
     border-radius: 10px;
     border: 10px;
-    border-color: #ec5757;
+    border-color: #a12323;
+}
+
+::-webkit-scrollbar{
+    background-color: #c54444;
+}
+
+::-webkit-scrollbar-thumb{
+    background-color: #7e2323
 }
 
 .data {
@@ -132,6 +144,10 @@ body {
     padding: 8px;
     border: 1px;
     border-color: antiquewhite;
+}
+
+.pokemon-row.active{
+    background-color: #d37979; 
 }
 
 .img-pokemon-index{
