@@ -37,8 +37,6 @@ window.onload = async function() {
         pokemon.addEventListener("click", updatePokemon);
         document.getElementById("pokemon-list").append(pokemon);
     }
-
-    //console.log(pokedex);
 }
 
 async function getPokemon(num) {
@@ -46,7 +44,6 @@ async function getPokemon(num) {
 
     let res = await fetch(url);
     let pokemon = await res.json();
-    //console.log(pokemon);
 
     let pokemonName = pokemon["name"];
     let pokemonType = pokemon["types"];
@@ -60,15 +57,10 @@ async function getPokemon(num) {
     let pokemonEggsGroup = await res.json();
 
     let listAbilitiesName = await getAbilitiesName(pokemonAbilities);
-    //console.log(listAbilitiesName);
-
-    //console.log(pokemonEggsGroup["egg_groups"]);
+    
     let listEggsGroupName = await getPokemonEgssGroupName(pokemonEggsGroup["egg_groups"]);
-    //console.log(listEggsGroupName);
 
     let evolutions = await getEvolutions(num, pokemonName);
-    //console.log(evolutions);
-
     pokedex[num] = {
         "name" : pokemonName, 
         "img" : pokemonImg, 
@@ -251,7 +243,6 @@ function updatePokemon(){
     insertNewInformation(abilitiesTitle, abilitiesInfo);
 
     document.getElementById("pokemon-name").innerText = pokedex[this.id]["name"];
-    console.log(pokedex[this.id]);
 
     let evolutionList = pokedex[this.id]["evolutions"]
     i = 0;
