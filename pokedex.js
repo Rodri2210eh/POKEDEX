@@ -1,6 +1,6 @@
 const pokemonCount = 300;
 var pokedex = {}; // {1 : {"name" : "bulbsaur", "img" : url, "type" : ["grass", "poison"], "desc" : "...."} }
-
+let lastUpdate = 0
 window.onload = async function() {
 
     for (let i = 1; i <= pokemonCount; i++) {
@@ -38,9 +38,7 @@ window.onload = async function() {
         document.getElementById("pokemon-list").append(pokemon);
     }
 
-    document.getElementById("pokemon-description").innerText = pokedex[1]["desc"];
-
-    console.log(pokedex);
+    //console.log(pokedex);
 }
 
 async function getPokemon(num) {
@@ -68,6 +66,9 @@ async function getPokemon(num) {
     let listEggsGroupName = await getPokemonEgssGroupName(pokemonEggsGroup["egg_groups"]);
     //console.log(listEggsGroupName);
 
+    let evolutions = await getEvolutions(num, pokemonName);
+    //console.log(evolutions);
+
     pokedex[num] = {
         "name" : pokemonName, 
         "img" : pokemonImg, 
@@ -76,7 +77,8 @@ async function getPokemon(num) {
         "height": pokemonHeight,
         "species": pokemonSpecies,
         "abilities": listAbilitiesName,
-        "eggsGroup": listEggsGroupName
+        "eggsGroup": listEggsGroupName,
+        "evolutions": evolutions
     };
 
 }
@@ -93,6 +95,7 @@ function getAbilitiesName(pokemonAbilities){
 }
 
 function getPokemonEgssGroupName(pokemonEggsGroup) {
+    //get a string of pokemon eggs group
     let length = Object.keys(pokemonEggsGroup).length;
     let listEggsGroupName = []
     let i = 0;
@@ -103,8 +106,88 @@ function getPokemonEgssGroupName(pokemonEggsGroup) {
     return listEggsGroupName;
 }
 
+async function getEvolutions(id, name){
+    //get the chain of evolutions
+    
+    let url = "https://pokeapi.co/api/v2/evolution-chain/" + id;
+    let res = await fetch(url);
+    let temp = await res.json();
+    let chain = temp["chain"];
+
+    let evolution = [];
+    
+    let i = Object.keys(chain["evolves_to"]).length;
+    let pokemonName = chain["species"]["name"];
+    if (name !== pokemonName){
+        let j = 1;
+        while (j < id){
+            let url = "https://pokeapi.co/api/v2/evolution-chain/" + j;
+            let res = await fetch(url);
+            let temp = await res.json();
+            let chain = temp["chain"];
+            if (name === chain["species"]["name"]){
+                while (i != 0){
+                    let stage = {};
+                    pokemonName = chain["species"]["name"];
+                    let url = "https://pokeapi.co/api/v2/pokemon/" + pokemonName;
+                    let res = await fetch(url);
+                    let pokemon = await res.json();
+                    let pokemonImg = pokemon["sprites"]["front_default"];
+            
+                    stage = {
+                        "name": pokemonName,
+                        "img": pokemonImg
+                    };
+                    evolution.push(stage);
+            
+                    i = Object.keys(chain["evolves_to"]).length
+                    if (i != 0){
+                        chain = chain["evolves_to"]["0"];
+                    }
+                }
+                return evolution;
+            }
+            j += 1;
+        }
+        return evolution;
+    }
+
+
+    while (i != 0){
+        let stage = {};
+        pokemonName = chain["species"]["name"];
+        let url = "https://pokeapi.co/api/v2/pokemon/" + pokemonName;
+        let res = await fetch(url);
+        let pokemon = await res.json();
+        let pokemonImg = pokemon["sprites"]["front_default"];
+
+        stage = {
+            "name": pokemonName,
+            "img": pokemonImg
+        };
+        evolution.push(stage);
+
+        i = Object.keys(chain["evolves_to"]).length
+        if (i != 0){
+            chain = chain["evolves_to"]["0"];
+        }
+    }
+    return evolution;
+}
+
 function updatePokemon(){
+    //update box in the right site on html
     document.getElementById("pokemon-img").src = pokedex[this.id]["img"];
+
+    let second = document.getElementById("second-div")
+    while (second.lastChild) {
+        second.lastChild.remove();
+    }
+
+    let chain = document.getElementById("pokemon-evolution");
+    while (chain.lastChild) {
+        chain.lastChild.remove();
+    }
 
     //clear previous type
     let typesDiv = document.getElementById("pokemon-types");
@@ -122,6 +205,91 @@ function updatePokemon(){
         typesDiv.append(type);
     }
 
-    //update description
+    let weightInfo = pokedex[this.id]["weight"] + '"';
+    let weightTitle = "Weight: ";
+
+    insertNewInformation(weightTitle, weightInfo);
+
+    let heightInfo = pokedex[this.id]["height"] + '"';
+    let heightTitle = "Height: ";
+
+    insertNewInformation(heightTitle, heightInfo);
+
+    let speciesInfo = pokedex[this.id]["species"];
+    let speciesTitle = "Species: ";
+
+    insertNewInformation(speciesTitle, speciesInfo);
+
+    let eggsGroupInfoList = pokedex[this.id]["eggsGroup"];
+    let eggsGroupInfo = "";
+    let i = 0;
+    while (i < Object.keys(eggsGroupInfoList).length) {
+        if (eggsGroupInfo !== ""){
+            eggsGroupInfo += ", " + eggsGroupInfoList[i];
+        } else {
+            eggsGroupInfo = eggsGroupInfoList[i];
+        }
+        i += 1
+    }
+    let eggsGroupTitle = "Egss Group: ";
+
+    insertNewInformation(eggsGroupTitle, eggsGroupInfo);
+
+    let abilitiesInfoList = pokedex[this.id]["abilities"];
+    let abilitiesInfo = "";
+    i = 0;
+    while (i < Object.keys(abilitiesInfoList).length) {
+        if (abilitiesInfo !== ""){
+            abilitiesInfo += ", " + abilitiesInfoList[i];
+        } else {
+            abilitiesInfo = abilitiesInfoList[i];
+        }
+        i += 1
+    }
+    let abilitiesTitle = "Abilities: ";
+
+    insertNewInformation(abilitiesTitle, abilitiesInfo);
+
     document.getElementById("pokemon-name").innerText = pokedex[this.id]["name"];
+    console.log(pokedex[this.id]);
+
+    let evolutionList = pokedex[this.id]["evolutions"]
+    i = 0;
+    while (i != Object.keys(evolutionList).length) {
+        var imgEvo=document.createElement("img");
+        imgEvo.src= evolutionList[i]["img"];
+        imgEvo.classList.add("img-pokemon-evolution");
+
+        var nameLabel = document.createElement("figcaption");
+        nameLabel.innerText = evolutionList[i]["name"];
+        nameLabel.classList.add("evolution-titles");
+
+        let divEvolution = document.createElement("div");
+        divEvolution.classList.add("pokemon-general-div");
+
+        divEvolution.appendChild(imgEvo);
+        divEvolution.appendChild(nameLabel);
+
+        document.getElementById("pokemon-evolution").append(divEvolution);
+        i+= 1
+    }
+
+}
+
+function insertNewInformation(title, info){
+    var infoLabel = document.createElement("LABEL");
+    infoLabel.innerText = info;
+    infoLabel.classList.add("pokemon-general-info");
+
+    var titleLabel = document.createElement("LABEL");
+    titleLabel.innerText = title;
+    titleLabel.classList.add("pokemon-title-info");
+    
+    let pokemonGeneralRow = document.createElement("div");
+    pokemonGeneralRow.classList.add("pokemon-general-div");
+
+    pokemonGeneralRow.appendChild(titleLabel);
+    pokemonGeneralRow.appendChild(infoLabel);
+
+    document.getElementById("second-div").append(pokemonGeneralRow);
 }
